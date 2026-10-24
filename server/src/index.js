@@ -2,6 +2,11 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { query } from "./db.js";
+import authRoutes from "./routes/auth.js";
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET manquant dans le fichier .env");
+}
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -18,6 +23,14 @@ app.get("/api/health", async (req, res) => {
     console.error(err.message);
     res.status(500).json({ status: "error", database: "unreachable" });
   }
+});
+
+app.use("/api/auth", authRoutes);
+
+// Dernier filet de sécurité : toute erreur non gérée arrive ici
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: "Erreur serveur" });
 });
 
 app.listen(PORT, () => {
