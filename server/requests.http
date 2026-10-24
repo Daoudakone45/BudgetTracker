@@ -1,0 +1,92 @@
+# Requêtes de test pour l'extension VS Code "REST Client" (humao.rest-client).
+# Lance d'abord le serveur (npm run dev), puis clique sur "Send Request" au-dessus d'une requête.
+
+@baseUrl = http://localhost:4000/api
+
+### Le serveur et la base répondent-ils ?
+GET {{baseUrl}}/health
+
+### Inscription
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "moi@example.com",
+  "password": "motdepasse123",
+  "name": "Moi"
+}
+
+### Connexion — la réponse contient le token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "moi@example.com",
+  "password": "motdepasse123"
+}
+
+### Qui suis-je ? (réutilise automatiquement le token de la requête "login" ci-dessus)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{login.response.body.token}}
+
+### Sans token : doit répondre 401
+GET {{baseUrl}}/auth/me
+
+### ───────────── Catégories et transactions (lance "login" d'abord) ─────────────
+
+### Liste des catégories (pour connaître les categoryId)
+GET {{baseUrl}}/categories
+Authorization: Bearer {{login.response.body.token}}
+
+### Ajouter une dépense
+# @name created
+POST {{baseUrl}}/transactions
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "type": "EXPENSE",
+  "amount": "42.50",
+  "date": "2026-10-15",
+  "categoryId": 6,
+  "comment": "Courses Carrefour"
+}
+
+### Ajouter un revenu
+POST {{baseUrl}}/transactions
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "type": "INCOME",
+  "amount": "2500",
+  "date": "2026-10-01",
+  "categoryId": 1,
+  "comment": "Salaire octobre"
+}
+
+### Toutes mes transactions
+GET {{baseUrl}}/transactions
+Authorization: Bearer {{login.response.body.token}}
+
+### Filtres : mois, type, mot-clé (tu peux en combiner plusieurs ou en retirer)
+GET {{baseUrl}}/transactions?month=2026-10&type=EXPENSE&search=carrefour
+Authorization: Bearer {{login.response.body.token}}
+
+### Modifier la transaction créée par "Ajouter une dépense"
+PUT {{baseUrl}}/transactions/{{created.response.body.transaction.id}}
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "type": "EXPENSE",
+  "amount": "45",
+  "date": "2026-10-16",
+  "categoryId": 6,
+  "comment": "Courses Carrefour + pain"
+}
+
+### Supprimer la transaction créée par "Ajouter une dépense"
+DELETE {{baseUrl}}/transactions/{{created.response.body.transaction.id}}
+Authorization: Bearer {{login.response.body.token}}

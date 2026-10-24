@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import { query } from "./db.js";
 import authRoutes from "./routes/auth.js";
+import categoryRoutes from "./routes/categories.js";
+import transactionRoutes from "./routes/transactions.js";
 
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET manquant dans le fichier .env");
@@ -26,6 +28,8 @@ app.get("/api/health", async (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 // Dernier filet de sécurité : toute erreur non gérée arrive ici
 app.use((err, req, res, next) => {
