@@ -19,6 +19,9 @@ export default function Layout() {
             <NavLink to="/" end className={navLinkClass}>
               Tableau de bord
             </NavLink>
+            <NavLink to="/transactions" className={navLinkClass}>
+              Transactions
+            </NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden text-sm text-slate-500 sm:inline">{user.name || user.email}</span>
