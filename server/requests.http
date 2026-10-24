@@ -90,3 +90,13 @@ Content-Type: application/json
 ### Supprimer la transaction créée par "Ajouter une dépense"
 DELETE {{baseUrl}}/transactions/{{created.response.body.transaction.id}}
 Authorization: Bearer {{login.response.body.token}}
+
+### ───────────── Tableau de bord ─────────────
+
+### Résumé d'un mois : solde, revenus, dépenses, dépenses par catégorie, 5 dernières transactions
+GET {{baseUrl}}/summary?month=2026-10
+Authorization: Bearer {{login.response.body.token}}
+
+### Résumé sur toute la période (sans mois)
+GET {{baseUrl}}/summary
+Authorization: Bearer {{login.response.body.token}}

@@ -9,19 +9,19 @@ router.use(requireAuth);
 
 const TYPES = ["INCOME", "EXPENSE"];
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-const MONTH_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+export const MONTH_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
 // Nombre positif avec au plus 2 décimales : "12", "12.5", "12.50"
 const AMOUNT_REGEX = /^\d{1,10}(\.\d{1,2})?$/;
 
 // Colonnes renvoyées au client, avec le nom de la catégorie (via JOIN)
-const SELECT_TRANSACTION = `
+export const SELECT_TRANSACTION = `
   SELECT t.id, t.type, t.amount, t.date, t.comment, t.category_id, c.name AS category_name,
          t.created_at, t.updated_at
   FROM transactions t
   JOIN categories c ON c.id = t.category_id`;
 
 // pg renvoie les NUMERIC en texte (pour ne pas perdre de précision) : on convertit pour le client
-function toTransaction(row) {
+export function toTransaction(row) {
   return { ...row, amount: Number(row.amount) };
 }
 
