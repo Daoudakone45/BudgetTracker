@@ -3,12 +3,18 @@ const CURRENCY = 'EUR'
 const LOCALE = 'fr-FR'
 
 const amountFormatter = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CURRENCY })
+const roundAmountFormatter = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CURRENCY, maximumFractionDigits: 0 })
 const dateFormatter = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
 const monthFormatter = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric' })
 
 // 1234.5 → "1 234,50 €"
 export function formatAmount(value) {
   return amountFormatter.format(value)
+}
+
+// 1500 → "1 500 €" (sans centimes, pour les axes de graphique)
+export function formatRoundAmount(value) {
+  return roundAmountFormatter.format(value)
 }
 
 // "2026-10-15" → "15 oct. 2026"
@@ -34,4 +40,11 @@ export function today() {
 // Mois en cours au format "AAAA-MM"
 export function currentMonth() {
   return today().slice(0, 7)
+}
+
+// addMonths("2026-01", -1) → "2025-12"
+export function addMonths(month, delta) {
+  const [year, monthIndex] = month.split('-').map(Number)
+  const date = new Date(year, monthIndex - 1 + delta, 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }

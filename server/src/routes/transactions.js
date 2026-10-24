@@ -59,9 +59,9 @@ async function validateTransaction(body) {
   return { data: { type, amount, date, categoryId, comment } };
 }
 
-// GET /api/transactions?month=2026-10&type=EXPENSE&search=courses
+// GET /api/transactions?month=2026-10&type=EXPENSE&search=courses  (ou ?date=2026-10-15 pour un seul jour)
 router.get("/", async (req, res) => {
-  const { month, type, search } = req.query;
+  const { month, date, type, search } = req.query;
 
   // On construit le WHERE petit à petit, chaque valeur passant par un paramètre $n
   const conditions = ["t.user_id = $1"];
@@ -71,6 +71,11 @@ router.get("/", async (req, res) => {
     if (!MONTH_REGEX.test(month)) return res.status(400).json({ error: "Le mois doit être au format AAAA-MM" });
     params.push(`${month}-01`);
     conditions.push(`t.date >= $${params.length}::date AND t.date < $${params.length}::date + INTERVAL '1 month'`);
+  }
+  if (date) {
+    if (!isValidDate(date)) return res.status(400).json({ error: "La date doit être au format AAAA-MM-JJ" });
+    params.push(date);
+    conditions.push(`t.date = $${params.length}`);
   }
   if (type) {
     if (!TYPES.includes(type)) return res.status(400).json({ error: "Le type doit être INCOME ou EXPENSE" });
