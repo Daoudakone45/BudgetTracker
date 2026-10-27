@@ -11,8 +11,12 @@ const filterClass =
 
 export default function Transactions() {
   // Les filtres vivent dans l'URL : /transactions?date=2026-10-15&type=EXPENSE&search=courses
+  // (ou ?month=2026-10 pour un mois entier)
   const [searchParams, setSearchParams] = useSearchParams()
   const date = searchParams.get('date') || ''
+  const month = searchParams.get('month') || ''
+  // Filtrer sur un jour précis ('day', par défaut) ou sur un mois entier ('month')
+  const [periodMode, setPeriodMode] = useState(month ? 'month' : 'day')
   const type = searchParams.get('type') || ''
   const search = searchParams.get('search') || ''
 
@@ -27,7 +31,7 @@ export default function Transactions() {
   const [actionError, setActionError] = useState('')
 
   // Identifie la liste attendue : filtres actuels + numéro de rechargement
-  const apiQuery = new URLSearchParams(Object.entries({ date, type, search }).filter(([, value]) => value)).toString()
+  const apiQuery = new URLSearchParams(Object.entries({ date, month, type, search }).filter(([, value]) => value)).toString()
   const requestKey = `${apiQuery}#${reloadKey}`
   // Dernière réponse reçue, avec la clé de la requête qui l'a produite
   const [result, setResult] = useState({ key: null, transactions: [], error: '' })
@@ -55,6 +59,20 @@ export default function Transactions() {
     setSearchInput(value)
     clearTimeout(searchTimer.current)
     searchTimer.current = setTimeout(() => updateFilter('search', value.trim()), SEARCH_DELAY_MS)
+  }
+
+  // Changer de mode vide la période en cours : un jour et un mois ne se combinent pas
+  function handlePeriodModeChange(mode) {
+    setPeriodMode(mode)
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        next.delete('date')
+        next.delete('month')
+        return next
+      },
+      { replace: true },
+    )
   }
 
   function clearFilters() {
@@ -102,7 +120,7 @@ export default function Transactions() {
     setReloadKey((key) => key + 1)
   }
 
-  const hasFilters = date || type || search
+  const hasFilters = date || month || type || search
 
   return (
     <div>
@@ -118,10 +136,22 @@ export default function Transactions() {
 
       {/* Filtres */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          Date
-          <input type="date" value={date} onChange={(e) => updateFilter('date', e.target.value)} className={filterClass} />
-        </label>
+        <div className="flex gap-2">
+          <select
+            aria-label="Filtrer par"
+            value={periodMode}
+            onChange={(e) => handlePeriodModeChange(e.target.value)}
+            className={filterClass}
+          >
+            <option value="day">Jour</option>
+            <option value="month">Mois</option>
+          </select>
+          {periodMode === 'day' ? (
+            <input type="date" aria-label="Date" value={date} onChange={(e) => updateFilter('date', e.target.value)} className={filterClass} />
+          ) : (
+            <input type="month" aria-label="Mois" value={month} onChange={(e) => updateFilter('month', e.target.value)} className={filterClass} />
+          )}
+        </div>
         <select aria-label="Type" value={type} onChange={(e) => updateFilter('type', e.target.value)} className={filterClass}>
           <option value="">Revenus et dépenses</option>
           <option value="INCOME">Revenus</option>
