@@ -30,7 +30,7 @@ function parseId(value) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-function isValidDate(value) {
+export function isValidDate(value) {
   if (!DATE_REGEX.test(value)) return false;
   // Rejette les dates impossibles comme 2026-02-31
   const date = new Date(`${value}T00:00:00Z`);

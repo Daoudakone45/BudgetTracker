@@ -5,7 +5,6 @@ const LOCALE = 'fr-FR'
 const amountFormatter = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CURRENCY })
 const roundAmountFormatter = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CURRENCY, maximumFractionDigits: 0 })
 const dateFormatter = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
-const monthFormatter = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric' })
 
 // 1234.5 → "1 234,50 €"
 export function formatAmount(value) {
@@ -23,28 +22,22 @@ export function formatDate(isoDate) {
   return dateFormatter.format(new Date(`${isoDate}T12:00:00`))
 }
 
-// "2026-10" → "octobre 2026"
-export function formatMonth(month) {
-  return monthFormatter.format(new Date(`${month}-01T12:00:00`))
-}
-
-// Date du jour au format "AAAA-MM-JJ", dans le fuseau de l'utilisateur
+// Transforme un objet Date en "AAAA-MM-JJ", dans le fuseau de l'utilisateur
 // (toISOString() donnerait la date UTC, qui peut être celle d'hier ou de demain)
+function toIsoDate(date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+// Date du jour au format "AAAA-MM-JJ"
 export function today() {
-  const now = new Date()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${now.getFullYear()}-${month}-${day}`
+  return toIsoDate(new Date())
 }
 
-// Mois en cours au format "AAAA-MM"
-export function currentMonth() {
-  return today().slice(0, 7)
-}
-
-// addMonths("2026-01", -1) → "2025-12"
-export function addMonths(month, delta) {
-  const [year, monthIndex] = month.split('-').map(Number)
-  const date = new Date(year, monthIndex - 1 + delta, 1)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+// addDays("2026-03-01", -1) → "2026-02-28" (gère les fins de mois et les années bissextiles)
+export function addDays(isoDate, delta) {
+  const date = new Date(`${isoDate}T12:00:00`)
+  date.setDate(date.getDate() + delta)
+  return toIsoDate(date)
 }

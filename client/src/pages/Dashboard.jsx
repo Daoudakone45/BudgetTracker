@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../api.js'
 import { useAuth } from '../auth/AuthContext.js'
-import { addMonths, currentMonth, formatAmount, formatDate, formatMonth } from '../format.js'
+import { addDays, formatAmount, formatDate, today } from '../format.js'
 import ExpenseChart from '../components/ExpenseChart.jsx'
 
 const cardClass = 'rounded-xl border border-slate-200 bg-white p-5'
@@ -19,40 +19,47 @@ function StatTile({ label, value, hint }) {
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const [month, setMonth] = useState(currentMonth)
-  // Même principe que la page Transactions : on charge tant que la réponse ne correspond pas au mois affiché
-  const [result, setResult] = useState({ month: null, summary: null, error: '' })
-  const loading = result.month !== month
+  const [date, setDate] = useState(today)
+  // Même principe que la page Transactions : on charge tant que la réponse ne correspond pas à la date affichée
+  const [result, setResult] = useState({ date: null, summary: null, error: '' })
+  const loading = result.date !== date
   const { summary, error } = result
 
   useEffect(() => {
     let cancelled = false
-    api(`/summary?month=${month}`)
-      .then((data) => !cancelled && setResult({ month, summary: data, error: '' }))
-      .catch((err) => !cancelled && setResult((prev) => ({ ...prev, month, error: err.message })))
+    api(`/summary?date=${date}`)
+      .then((data) => !cancelled && setResult({ date, summary: data, error: '' }))
+      .catch((err) => !cancelled && setResult((prev) => ({ ...prev, date, error: err.message })))
     return () => {
       cancelled = true
     }
-  }, [month])
+  }, [date])
 
-  const isCurrentMonth = month === currentMonth()
-  const monthLabel = formatMonth(month)
+  const isToday = date === today()
+  const dateLabel = formatDate(date)
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-slate-900">Bonjour {user.name || user.email}</h1>
-        {/* Sélecteur de mois */}
+        {/* Sélecteur de date : flèches pour la veille / le lendemain, ou choix direct dans le calendrier */}
         <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
-          <button onClick={() => setMonth(addMonths(month, -1))} aria-label="Mois précédent" className="rounded-md px-2.5 py-1 text-slate-600 hover:bg-slate-100">
+          <button onClick={() => setDate(addDays(date, -1))} aria-label="Jour précédent" className="rounded-md px-2.5 py-1 text-slate-600 hover:bg-slate-100">
             ←
           </button>
-          <span className="min-w-36 text-center text-sm font-medium capitalize text-slate-900">{monthLabel}</span>
-          <button onClick={() => setMonth(addMonths(month, 1))} aria-label="Mois suivant" className="rounded-md px-2.5 py-1 text-slate-600 hover:bg-slate-100">
+          <input
+            type="date"
+            aria-label="Date"
+            value={date}
+            // Le champ peut être vidé avec la croix du navigateur : on ignore ce cas
+            onChange={(e) => e.target.value && setDate(e.target.value)}
+            className="rounded-md px-2 py-1 text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-emerald-200"
+          />
+          <button onClick={() => setDate(addDays(date, 1))} aria-label="Jour suivant" className="rounded-md px-2.5 py-1 text-slate-600 hover:bg-slate-100">
             →
           </button>
-          {!isCurrentMonth && (
-            <button onClick={() => setMonth(currentMonth())} className="rounded-md px-2.5 py-1 text-sm text-emerald-700 hover:bg-emerald-50">
+          {!isToday && (
+            <button onClick={() => setDate(today())} className="rounded-md px-2.5 py-1 text-sm text-emerald-700 hover:bg-emerald-50">
               Aujourd’hui
             </button>
           )}
@@ -72,8 +79,8 @@ export default function Dashboard() {
               <p className="mt-1 text-4xl font-semibold text-slate-900">{formatAmount(summary.balance)}</p>
               <p className="mt-1 text-xs text-slate-500">Tous revenus moins toutes dépenses</p>
             </div>
-            <StatTile label="Revenus du mois" value={summary.income} hint={monthLabel} />
-            <StatTile label="Dépenses du mois" value={summary.expense} hint={monthLabel} />
+            <StatTile label="Revenus du jour" value={summary.income} hint={dateLabel} />
+            <StatTile label="Dépenses du jour" value={summary.expense} hint={dateLabel} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-5">
@@ -83,7 +90,7 @@ export default function Dashboard() {
               {summary.byCategory.length > 0 ? (
                 <ExpenseChart data={summary.byCategory} />
               ) : (
-                <p className="py-8 text-center text-sm text-slate-500">Aucune dépense en {monthLabel}.</p>
+                <p className="py-8 text-center text-sm text-slate-500">Aucune dépense le {dateLabel}.</p>
               )}
             </section>
 

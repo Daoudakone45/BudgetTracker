@@ -10,9 +10,9 @@ const filterClass =
   'rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200'
 
 export default function Transactions() {
-  // Les filtres vivent dans l'URL : /transactions?month=2026-10&type=EXPENSE&search=courses
+  // Les filtres vivent dans l'URL : /transactions?date=2026-10-15&type=EXPENSE&search=courses
   const [searchParams, setSearchParams] = useSearchParams()
-  const month = searchParams.get('month') || ''
+  const date = searchParams.get('date') || ''
   const type = searchParams.get('type') || ''
   const search = searchParams.get('search') || ''
 
@@ -27,7 +27,7 @@ export default function Transactions() {
   const [actionError, setActionError] = useState('')
 
   // Identifie la liste attendue : filtres actuels + numéro de rechargement
-  const apiQuery = new URLSearchParams(Object.entries({ month, type, search }).filter(([, value]) => value)).toString()
+  const apiQuery = new URLSearchParams(Object.entries({ date, type, search }).filter(([, value]) => value)).toString()
   const requestKey = `${apiQuery}#${reloadKey}`
   // Dernière réponse reçue, avec la clé de la requête qui l'a produite
   const [result, setResult] = useState({ key: null, transactions: [], error: '' })
@@ -102,7 +102,7 @@ export default function Transactions() {
     setReloadKey((key) => key + 1)
   }
 
-  const hasFilters = month || type || search
+  const hasFilters = date || type || search
 
   return (
     <div>
@@ -118,13 +118,10 @@ export default function Transactions() {
 
       {/* Filtres */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <input
-          type="month"
-          aria-label="Mois"
-          value={month}
-          onChange={(e) => updateFilter('month', e.target.value)}
-          className={filterClass}
-        />
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          Date
+          <input type="date" value={date} onChange={(e) => updateFilter('date', e.target.value)} className={filterClass} />
+        </label>
         <select aria-label="Type" value={type} onChange={(e) => updateFilter('type', e.target.value)} className={filterClass}>
           <option value="">Revenus et dépenses</option>
           <option value="INCOME">Revenus</option>
